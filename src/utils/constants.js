@@ -1,0 +1,10 @@
+export const WRITER_CUT_PCT = 0.30
+export const RETENTION_PCT = 0.10
+export const FIRST_RELEASE_PCT = 0.90
+export const PACKAGE_PERIODS = 2
+export const REGULAR_PERIODS = 1
+export const CLIENT_TYPES = ['Regular', 'Package']
+export const REGULAR_GIVES = [1, 2]
+export const PACKAGE_GIVES = [1, 2, 3, 4]
+export const ROLES = { OWNER: 'owner', FM: 'fm', OPS: 'ops' }
+export const CLIENT_STATUSES = ['Active', 'Completed', 'Overdue', 'On Hold', 'Carry-over']
