@@ -6,6 +6,7 @@ import Modal from '../components/ui/Modal'
 import ClientTable from '../components/clients/ClientTable'
 import ClientForm from '../components/clients/ClientForm'
 import ClientFilters from '../components/clients/ClientFilters'
+import ClientDetailModal from '../components/clients/ClientDetailModal'
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from '../hooks/useClients'
 import { useToast } from '../components/ui/Toast'
 import { canDo } from '../utils/roleGuards'
@@ -23,6 +24,7 @@ export default function Clients() {
 
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [viewing, setViewing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
 
   const handleAdd = async (form) => {
@@ -75,10 +77,11 @@ export default function Clients() {
         clients={clients}
         onEdit={setEditing}
         onDelete={setConfirmDelete}
+        onView={setViewing}
         totalCount={clients?.length || 0}
       />
 
-      <Modal open={showForm} onClose={() => setShowForm(false)} title="Add New Client" size="lg">
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="Add New Client" size="xl">
         <ClientForm
           onSubmit={handleAdd}
           onCancel={() => setShowForm(false)}
@@ -86,7 +89,7 @@ export default function Clients() {
         />
       </Modal>
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Client" size="lg">
+      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Client" size="xl">
         <ClientForm
           client={editing}
           onSubmit={handleEdit}
@@ -95,6 +98,12 @@ export default function Clients() {
         />
       </Modal>
 
+      <ClientDetailModal
+        client={viewing}
+        open={!!viewing}
+        onClose={() => setViewing(null)}
+      />
+
       <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Archive Client" size="sm">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
@@ -102,12 +111,8 @@ export default function Clients() {
             This will set the client status to Completed. Financial history will be preserved.
           </p>
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setConfirmDelete(null)}>
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDelete} loading={deleteClient.isPending}>
-              Archive
-            </Button>
+            <Button variant="secondary" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteClient.isPending}>Archive</Button>
           </div>
         </div>
       </Modal>

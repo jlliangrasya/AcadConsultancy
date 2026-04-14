@@ -9,6 +9,12 @@ export function useInstallments(filters = {}) {
       const db = getMockDB()
       let results = [...db.installments]
       if (filters.status) results = results.filter((i) => i.status === filters.status)
+      if (filters.search) {
+        const s = filters.search.toLowerCase()
+        results = results.filter((i) =>
+          i.clients?.name.toLowerCase().includes(s) || i.clients?.project_name.toLowerCase().includes(s)
+        )
+      }
       return results.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
     },
   })
@@ -17,9 +23,8 @@ export function useInstallments(filters = {}) {
 function recalcPayrollTriggers(db, clientId) {
   const client = db.clients.find((c) => c.id === clientId)
   if (!client) return
-  const totalCollected = db.installments
-    .filter((i) => i.client_id === clientId)
-    .reduce((s, i) => s + Number(i.amount_paid), 0)
+  const inst = db.installments.find((i) => i.client_id === clientId)
+  const totalCollected = inst ? inst.total_paid : 0
 
   db.payroll.forEach((p) => {
     if (p.client_id !== clientId) return
@@ -38,28 +43,49 @@ export function useRecordPayment() {
   const user = useAppStore((s) => s.user)
 
   return useMutation({
-    mutationFn: async ({ id, amount_paid, date_paid }) => {
+    mutationFn: async ({ installmentId, amount, datePaid }) => {
       const db = getMockDB()
-      const inst = db.installments.find((i) => i.id === id)
+      const inst = db.installments.find((i) => i.id === installmentId)
       if (!inst) throw new Error('Installment not found')
 
-      const newPaid = Number(inst.amount_paid) + Number(amount_paid)
-      inst.amount_paid = newPaid
-      inst.date_paid = date_paid || new Date().toISOString().split('T')[0]
-      inst.status = newPaid >= Number(inst.amount_due) ? 'Paid' : 'Pending'
-      inst.recorded_by = user?.id
+      if (inst.total_paid >= inst.total_amount) {
+        throw new Error('This client is already fully paid')
+      }
+
+      const nextGive = inst.current_give + 1
+      if (nextGive > inst.gives) {
+        throw new Error('All gives have been recorded')
+      }
+
+      // Add payment record
+      const payment = {
+        id: uuid(),
+        installment_id: installmentId,
+        give_number: nextGive,
+        amount: Number(amount),
+        date_paid: datePaid || new Date().toISOString().split('T')[0],
+        recorded_by: user?.id,
+        recorded_at: new Date().toISOString(),
+      }
+      inst.payments.push(payment)
+
+      // Update totals
+      inst.total_paid = Number(inst.total_paid) + Number(amount)
+      inst.current_give = nextGive
+      inst.status = inst.total_paid >= inst.total_amount ? 'Fully Paid' : 'Partial'
       inst.updated_at = new Date().toISOString()
 
-      // Recalculate payroll triggers (mimics DB trigger T5)
+      // Recalculate payroll triggers
       recalcPayrollTriggers(db, inst.client_id)
 
       db.auditLogs.unshift({
-        id: uuid(), action: 'record_payment', entity: 'installment', entity_id: id,
-        description: `Recorded payment of ₱${Number(amount_paid).toLocaleString()} for give #${inst.give_number}`,
+        id: uuid(), action: 'record_payment', entity: 'installment', entity_id: installmentId,
+        description: `Recorded Give ${nextGive} payment of ₱${Number(amount).toLocaleString()} for ${inst.clients?.name}`,
         old_value: null, new_value: null, performed_by: user?.id,
         created_at: new Date().toISOString(),
         user_profiles: { full_name: user?.full_name || 'System' },
       })
+
       return inst
     },
     onSuccess: () => {
@@ -67,6 +93,7 @@ export function useRecordPayment() {
       queryClient.invalidateQueries({ queryKey: ['payroll'] })
       queryClient.invalidateQueries({ queryKey: ['clients'] })
       queryClient.invalidateQueries({ queryKey: ['dashboardKPIs'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardAlerts'] })
       queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
     },
   })

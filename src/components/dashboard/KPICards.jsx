@@ -11,9 +11,9 @@ export default function KPICards() {
       const db = getMockDB()
       const totalClients = db.clients.length
       const activeClients = db.clients.filter((c) => c.status === 'Active').length
-      const totalCollected = db.installments.reduce((s, i) => s + Number(i.amount_paid), 0)
-      const totalDue = db.installments.reduce((s, i) => s + Number(i.amount_due), 0)
-      const pendingPayments = db.installments.filter((i) => i.status === 'Pending').length
+      const totalCollected = db.installments.reduce((s, i) => s + Number(i.total_paid), 0)
+      const totalDue = db.installments.reduce((s, i) => s + Number(i.total_amount), 0)
+      const pendingPayments = db.installments.filter((i) => i.status !== 'Fully Paid').length
       const payrollPendingApproval = db.payroll.filter((p) => p.trigger_met && !p.admin_approved).length
       const payrollReleased = db.payroll.filter((p) => p.first_release_status === 'Released').length
       const totalReleased = db.payroll

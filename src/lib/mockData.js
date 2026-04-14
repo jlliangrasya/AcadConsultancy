@@ -32,16 +32,16 @@ const SALES_AGENTS = [
 
 // ---- Clients (10 sample) ----
 const CLIENT_DEFS = [
-  { name: 'Maria Clara', contact: '09171111111', type: 'Package', project_name: 'Thesis - Educational Psychology', subject: 'Education', school: 'PUP', total_amount: 40000, gives: 4, writer_id: 'w-001', sales_agent_id: 'a-001', year_batch: 2026, start_date: '2026-01-15', due_date: '2026-06-30', status: 'Active' },
-  { name: 'Jose Rizal Jr.', contact: '09172222222', type: 'Regular', project_name: 'Research Paper - Philippine History', subject: 'History', school: 'UST', total_amount: 15000, gives: 2, writer_id: 'w-002', sales_agent_id: 'a-002', year_batch: 2026, start_date: '2026-02-01', due_date: '2026-04-15', status: 'Active' },
-  { name: 'Andres Bonifacio III', contact: '09173333333', type: 'Package', project_name: 'Capstone Project - IT Management', subject: 'Information Technology', school: 'FEU', total_amount: 50000, gives: 3, writer_id: 'w-003', sales_agent_id: null, year_batch: 2026, start_date: '2026-01-20', due_date: '2026-07-31', status: 'Active' },
-  { name: 'Gabriela Silang', contact: '09174444444', type: 'Regular', project_name: 'Case Study - Business Ethics', subject: 'Business', school: 'DLSU', total_amount: 8000, gives: 1, writer_id: 'w-001', sales_agent_id: 'a-003', year_batch: 2026, start_date: '2026-03-01', due_date: '2026-03-30', status: 'Active' },
-  { name: 'Emilio Aguinaldo', contact: '09175555555', type: 'Package', project_name: 'Thesis - Public Administration', subject: 'Political Science', school: 'UP Diliman', total_amount: 60000, gives: 2, writer_id: 'w-002', sales_agent_id: 'a-001', year_batch: 2026, start_date: '2026-01-10', due_date: '2026-08-30', status: 'Active' },
-  { name: 'Apolinario Mabini', contact: '09176666666', type: 'Regular', project_name: 'Term Paper - Constitutional Law', subject: 'Law', school: 'Ateneo', total_amount: 12000, gives: 2, writer_id: 'w-003', sales_agent_id: null, year_batch: 2026, start_date: '2026-02-15', due_date: '2026-04-30', status: 'Active' },
-  { name: 'Tandang Sora', contact: '09177777777', type: 'Package', project_name: 'Dissertation Chapter 1-3', subject: 'Nursing', school: 'CEU', total_amount: 45000, gives: 4, writer_id: 'w-001', sales_agent_id: 'a-002', year_batch: 2026, start_date: '2026-02-01', due_date: '2026-09-30', status: 'Active' },
-  { name: 'Lapu-Lapu Jr.', contact: '09178888888', type: 'Regular', project_name: 'Reaction Paper - Filipino Literature', subject: 'Filipino', school: 'Mapua', total_amount: 5000, gives: 1, writer_id: 'w-002', sales_agent_id: 'a-003', year_batch: 2026, start_date: '2026-03-10', due_date: '2026-03-25', status: 'Active' },
-  { name: 'Sultan Kudarat', contact: '09179999999', type: 'Package', project_name: 'Thesis - Agricultural Science', subject: 'Agriculture', school: 'UPLB', total_amount: 35000, gives: 3, writer_id: 'w-003', sales_agent_id: null, year_batch: 2025, start_date: '2025-09-01', due_date: '2026-05-31', status: 'Carry-over', is_carry_over: true },
-  { name: 'Diego Silang', contact: '09170000000', type: 'Regular', project_name: 'Feasibility Study - Small Business', subject: 'Entrepreneurship', school: 'TIP', total_amount: 18000, gives: 2, writer_id: 'w-001', sales_agent_id: 'a-001', year_batch: 2026, start_date: '2026-03-05', due_date: '2026-05-15', status: 'Active' },
+  { name: 'Maria Clara', contact: '09171111111', type: 'Package', project_name: 'Thesis - Educational Psychology', level: 'Masters', program: 'MA in Education', school: 'PUP', total_amount: 40000, gives: 4, writer_id: 'w-001', sales_agent_id: 'a-001', year_batch: 2026, start_date: '2026-01-15', due_date: '2026-06-30', latest_deadline: 'June 30', status: 'Active', referral_source: 'YTWmain', package_inclusions: ['Chapters 1-5', 'PPT', 'Tool', 'Statistician and Grammarian', 'AI & Plagiarism Report'], validator_count: 1, extra_rrls_count: 1, revision_notes: 'minor revisions' },
+  { name: 'Jose Rizal Jr.', contact: '09172222222', type: 'Regular', project_name: 'Research Paper - Philippine History', level: 'College', program: 'AB History', school: 'UST', total_amount: 15000, gives: 2, writer_id: 'w-002', sales_agent_id: 'a-002', year_batch: 2026, start_date: '2026-02-01', due_date: '2026-04-15', latest_deadline: 'April 15', status: 'Active', referral_source: 'FB Page', referred_by: 'Maria Clara', service_availed: 'RRLs' },
+  { name: 'Andres Bonifacio III', contact: '09173333333', type: 'Package', project_name: 'Capstone Project - IT Management', level: 'College', program: 'BS Information Technology', school: 'FEU', total_amount: 50000, gives: 3, writer_id: 'w-003', sales_agent_id: null, year_batch: 2026, start_date: '2026-01-20', due_date: '2026-07-31', latest_deadline: 'July 31', status: 'Active', package_inclusions: ['Chapters 1-5', 'PPT', 'Tool', 'AI & Plagiarism Report', 'Exclusive Defenses and Mock Review'], validator_count: 2, extra_rrls_count: 1, revision_notes: '2 major revisions' },
+  { name: 'Gabriela Silang', contact: '09174444444', type: 'Regular', project_name: 'Case Study - Business Ethics', level: 'College', program: 'BS Business Administration', school: 'DLSU', total_amount: 8000, gives: 1, writer_id: 'w-001', sales_agent_id: 'a-003', year_batch: 2026, start_date: '2026-03-01', due_date: '2026-03-30', latest_deadline: 'March 30', status: 'Active', referred_by: 'Emilio Aguinaldo', service_availed: 'revision' },
+  { name: 'Emilio Aguinaldo', contact: '09175555555', type: 'Package', project_name: 'Thesis - Public Administration', level: 'PhD', program: 'PhD in Public Administration', school: 'UP Diliman', total_amount: 60000, gives: 2, writer_id: 'w-002', sales_agent_id: 'a-001', year_batch: 2026, start_date: '2026-01-10', due_date: '2026-08-30', latest_deadline: 'August 30', status: 'Active', referral_source: 'Referral', package_inclusions: ['Chapters 1-5', 'PPT', 'Tool', 'Statistician and Grammarian', 'AI & Plagiarism Report', 'Exclusive Defenses and Mock Review', 'Validator', 'Extra RRLs'], validator_count: 1, extra_rrls_count: 2, revision_notes: 'minor revisions' },
+  { name: 'Apolinario Mabini', contact: '09176666666', type: 'Regular', project_name: 'Term Paper - Constitutional Law', level: 'College', program: 'AB Political Science', school: 'Ateneo', total_amount: 12000, gives: 2, writer_id: 'w-003', sales_agent_id: null, year_batch: 2026, start_date: '2026-02-15', due_date: '2026-04-30', latest_deadline: 'April 30', status: 'Active', service_availed: 'RRLs, revision' },
+  { name: 'Tandang Sora', contact: '09177777777', type: 'Package', project_name: 'Dissertation Chapter 1-3', level: 'PhD', program: 'PhD in Nursing', school: 'CEU', total_amount: 45000, gives: 4, writer_id: 'w-001', sales_agent_id: 'a-002', year_batch: 2026, start_date: '2026-02-01', due_date: '2026-09-30', latest_deadline: 'September 30', status: 'Active', referral_source: 'YTWmain', package_inclusions: ['Chapters 1-5', 'PPT', 'Statistician and Grammarian', 'AI & Plagiarism Report', 'Validator'], validator_count: 1, extra_rrls_count: 1, revision_notes: 'minor revisions' },
+  { name: 'Lapu-Lapu Jr.', contact: '09178888888', type: 'Regular', project_name: 'Reaction Paper - Filipino Literature', level: 'Senior High School', program: 'HUMSS', school: 'Mapua', total_amount: 5000, gives: 1, writer_id: 'w-002', sales_agent_id: 'a-003', year_batch: 2026, start_date: '2026-03-10', due_date: '2026-03-25', latest_deadline: 'March 25', status: 'Active', service_availed: 'revision' },
+  { name: 'Sultan Kudarat', contact: '09179999999', type: 'Package', project_name: 'Thesis - Agricultural Science', level: 'Masters', program: 'MS Agriculture', school: 'UPLB', total_amount: 35000, gives: 3, writer_id: 'w-003', sales_agent_id: null, year_batch: 2025, start_date: '2025-09-01', due_date: '2026-05-31', latest_deadline: 'May 31', status: 'Carry-over', is_carry_over: true, package_inclusions: ['Chapters 1-5', 'Tool', 'Statistician and Grammarian'], validator_count: 1, extra_rrls_count: 1, revision_notes: 'major revisions' },
+  { name: 'Diego Silang', contact: '09170000000', type: 'Regular', project_name: 'Feasibility Study - Small Business', level: 'College', program: 'BS Entrepreneurship', school: 'TIP', total_amount: 18000, gives: 2, writer_id: 'w-001', sales_agent_id: 'a-001', year_batch: 2026, start_date: '2026-03-05', due_date: '2026-05-15', latest_deadline: 'May 15', status: 'Active', referral_source: 'FB Page', service_availed: 'RRLs' },
 ]
 
 // Build derived data
@@ -61,8 +61,17 @@ function buildMockDB() {
       id: clientId,
       ...def,
       is_carry_over: def.is_carry_over || false,
-      referral_source: null,
-      notes: null,
+      referral_source: def.referral_source || null,
+      notes: def.notes || null,
+      package_inclusions: def.package_inclusions || [],
+      validator_count: def.validator_count || 1,
+      extra_rrls_count: def.extra_rrls_count || 1,
+      revision_notes: def.revision_notes || '',
+      service_availed: def.service_availed || '',
+      level: def.level || '',
+      program: def.program || '',
+      latest_deadline: def.latest_deadline || '',
+      referred_by: def.referred_by || '',
       added_by: USERS.ops.id,
       completed_at: null,
       created_at: new Date(2026, 0, 1 + idx).toISOString(),
@@ -71,39 +80,57 @@ function buildMockDB() {
       sales_agents: def.sales_agent_id ? SALES_AGENTS.find((a) => a.id === def.sales_agent_id) : null,
     }
 
-    // Generate installments
-    for (let i = 1; i <= def.gives; i++) {
-      const instId = `inst-${clientId}-${i}`
-      const amountDue = def.total_amount / def.gives
-      // Pre-pay some for demo: first 3 clients have some payments
-      let amountPaid = 0
-      let status = 'Pending'
-      let datePaid = null
-      if (idx === 0 && i <= 2) { amountPaid = amountDue; status = 'Paid'; datePaid = '2026-02-15' }
-      if (idx === 1 && i === 1) { amountPaid = amountDue; status = 'Paid'; datePaid = '2026-02-20' }
-      if (idx === 3) { amountPaid = amountDue; status = 'Paid'; datePaid = '2026-03-10' }
+    // Generate ONE installment row per client + payment history
+    const instId = `inst-${clientId}`
+    const payments = []
+    let totalPaid = 0
 
-      installments.push({
-        id: instId,
-        client_id: clientId,
-        give_number: i,
-        amount_due: amountDue,
-        amount_paid: amountPaid,
-        date_paid: datePaid,
-        status,
-        recorded_by: amountPaid > 0 ? USERS.fm.id : null,
-        updated_at: new Date().toISOString(),
-        clients: { name: def.name, project_name: def.project_name, type: def.type, total_amount: def.total_amount, status: def.status, writer_id: def.writer_id, writers: client.writers },
-      })
+    // Pre-seed some payment records for demo
+    if (idx === 0) {
+      // Maria Clara: 2 payments made (Give 1 & 2 of 4)
+      payments.push(
+        { id: `pmt-${clientId}-1`, installment_id: instId, give_number: 1, amount: def.total_amount / def.gives, date_paid: '2026-02-15', recorded_by: USERS.fm.id, recorded_at: '2026-02-15T10:00:00Z' },
+        { id: `pmt-${clientId}-2`, installment_id: instId, give_number: 2, amount: def.total_amount / def.gives, date_paid: '2026-02-28', recorded_by: USERS.fm.id, recorded_at: '2026-02-28T14:00:00Z' },
+      )
+      totalPaid = (def.total_amount / def.gives) * 2
+    } else if (idx === 1) {
+      // Jose Rizal Jr.: 1 payment made (Give 1 of 2)
+      payments.push(
+        { id: `pmt-${clientId}-1`, installment_id: instId, give_number: 1, amount: def.total_amount / def.gives, date_paid: '2026-02-20', recorded_by: USERS.fm.id, recorded_at: '2026-02-20T09:00:00Z' },
+      )
+      totalPaid = def.total_amount / def.gives
+    } else if (idx === 3) {
+      // Gabriela Silang: fully paid (1 give)
+      payments.push(
+        { id: `pmt-${clientId}-1`, installment_id: instId, give_number: 1, amount: def.total_amount, date_paid: '2026-03-10', recorded_by: USERS.fm.id, recorded_at: '2026-03-10T14:00:00Z' },
+      )
+      totalPaid = def.total_amount
     }
+
+    const instStatus = totalPaid >= def.total_amount ? 'Fully Paid' : totalPaid > 0 ? 'Partial' : 'Pending'
+    const currentGive = payments.length  // how many gives have been recorded
+
+    installments.push({
+      id: instId,
+      client_id: clientId,
+      total_amount: def.total_amount,
+      total_paid: totalPaid,
+      gives: def.gives,
+      current_give: currentGive,
+      status: instStatus,
+      updated_at: new Date().toISOString(),
+      payments,
+      clients: { name: def.name, project_name: def.project_name, type: def.type, total_amount: def.total_amount, status: def.status, writer_id: def.writer_id, writers: client.writers },
+    })
 
     // Generate payroll
     const periods = def.type === 'Package' ? 2 : 1
     const gross = (def.total_amount * 0.30) / periods
     for (let p = 1; p <= periods; p++) {
       const payId = `pay-${clientId}-${p}`
-      // Compute trigger_met from installment payments
-      const totalCollected = installments.filter((i) => i.client_id === clientId).reduce((s, i) => s + i.amount_paid, 0)
+      // Compute trigger_met from installment total_paid
+      const inst = installments.find((i) => i.client_id === clientId)
+      const totalCollected = inst ? inst.total_paid : 0
       let triggerMet = false
       if (def.type === 'Regular') triggerMet = totalCollected >= def.total_amount
       else if (p === 1) triggerMet = totalCollected >= def.total_amount * 0.50

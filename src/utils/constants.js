@@ -8,3 +8,21 @@ export const REGULAR_GIVES = [1, 2]
 export const PACKAGE_GIVES = [1, 2, 3, 4]
 export const ROLES = { OWNER: 'owner', FM: 'fm', OPS: 'ops' }
 export const CLIENT_STATUSES = ['Active', 'Completed', 'Overdue', 'On Hold', 'Carry-over']
+
+export const LEVELS = [
+  'Senior High School',
+  'College',
+  'Masters',
+  'PhD',
+]
+
+export const PACKAGE_INCLUSIONS = [
+  'Chapters 1-5',
+  'PPT',
+  'Tool',
+  'Statistician and Grammarian',
+  'AI & Plagiarism Report',
+  'Exclusive Defenses and Mock Review',
+  'Validator',
+  'Extra RRLs',
+]

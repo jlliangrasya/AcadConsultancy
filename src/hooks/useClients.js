@@ -14,6 +14,7 @@ export function useClients(filters = {}) {
       if (filters.year_batch) results = results.filter((c) => c.year_batch === Number(filters.year_batch))
       if (filters.writer_id) results = results.filter((c) => c.writer_id === filters.writer_id)
       if (filters.sales_agent_id) results = results.filter((c) => c.sales_agent_id === filters.sales_agent_id)
+      if (filters.level) results = results.filter((c) => c.level === filters.level)
       if (filters.is_carry_over === 'true') results = results.filter((c) => c.is_carry_over)
       if (filters.is_carry_over === 'false') results = results.filter((c) => !c.is_carry_over)
       if (filters.search) {
@@ -57,21 +58,19 @@ export function useCreateClient() {
         paper_releases: [],
       }
 
-      // Auto-generate installments
-      for (let i = 1; i <= clientData.gives; i++) {
-        db.installments.push({
-          id: uuid(),
-          client_id: clientId,
-          give_number: i,
-          amount_due: clientData.total_amount / clientData.gives,
-          amount_paid: 0,
-          date_paid: null,
-          status: 'Pending',
-          recorded_by: null,
-          updated_at: new Date().toISOString(),
-          clients: { name: clientData.name, project_name: clientData.project_name, type: clientData.type, total_amount: clientData.total_amount, status: 'Active', writer_id: clientData.writer_id, writers: writer ? { name: writer.name } : null },
-        })
-      }
+      // Auto-generate ONE installment row per client
+      db.installments.push({
+        id: uuid(),
+        client_id: clientId,
+        total_amount: clientData.total_amount,
+        total_paid: 0,
+        gives: clientData.gives,
+        current_give: 0,
+        status: 'Pending',
+        updated_at: new Date().toISOString(),
+        payments: [],
+        clients: { name: clientData.name, project_name: clientData.project_name, type: clientData.type, total_amount: clientData.total_amount, status: 'Active', writer_id: clientData.writer_id, writers: writer ? { name: writer.name } : null },
+      })
 
       // Auto-generate payroll
       const periods = clientData.type === 'Package' ? 2 : 1

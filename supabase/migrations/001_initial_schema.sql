@@ -63,18 +63,28 @@ CREATE TABLE clients (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Installments
+-- Installments (one row per client — payment history in separate table)
 CREATE TABLE installments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-  give_number INT NOT NULL CHECK (give_number BETWEEN 1 AND 4),
-  amount_due NUMERIC NOT NULL,
-  amount_paid NUMERIC DEFAULT 0,
-  date_paid DATE,
-  status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending','Paid','Overdue')),
-  recorded_by UUID REFERENCES user_profiles(id),
+  total_amount NUMERIC NOT NULL,
+  total_paid NUMERIC DEFAULT 0,
+  gives INT NOT NULL CHECK (gives BETWEEN 1 AND 4),
+  current_give INT DEFAULT 0,
+  status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending','Partial','Fully Paid','Overdue')),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(client_id, give_number)
+  UNIQUE(client_id)
+);
+
+-- Payment records (one row per give payment)
+CREATE TABLE payment_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  installment_id UUID NOT NULL REFERENCES installments(id) ON DELETE CASCADE,
+  give_number INT NOT NULL CHECK (give_number BETWEEN 1 AND 4),
+  amount NUMERIC NOT NULL CHECK (amount > 0),
+  date_paid DATE NOT NULL,
+  recorded_by UUID REFERENCES user_profiles(id),
+  recorded_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Paper releases
@@ -222,15 +232,12 @@ CREATE TABLE expenses (
 -- 2. TRIGGERS
 -- ========================
 
--- T1: Auto-generate installments on client insert
+-- T1: Auto-generate ONE installment row per client on insert
 CREATE OR REPLACE FUNCTION generate_installments()
 RETURNS TRIGGER AS $$
-DECLARE i INT;
 BEGIN
-  FOR i IN 1..NEW.gives LOOP
-    INSERT INTO installments (client_id, give_number, amount_due)
-    VALUES (NEW.id, i, NEW.total_amount / NEW.gives);
-  END LOOP;
+  INSERT INTO installments (client_id, total_amount, gives)
+  VALUES (NEW.id, NEW.total_amount, NEW.gives);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -292,33 +299,34 @@ CREATE TRIGGER trg_agent_cut
 AFTER INSERT ON clients
 FOR EACH ROW EXECUTE FUNCTION generate_agent_cut();
 
--- T5: Auto-update payroll trigger_met when installment is recorded
+-- T5: Auto-update payroll trigger_met when installment total_paid changes
 CREATE OR REPLACE FUNCTION check_payroll_trigger()
 RETURNS TRIGGER AS $$
 DECLARE
   total_contract NUMERIC; total_collected NUMERIC; client_type TEXT;
+  v_client_id UUID;
 BEGIN
+  v_client_id := NEW.client_id;
   SELECT c.total_amount, c.type INTO total_contract, client_type
-  FROM clients c WHERE c.id = NEW.client_id;
+  FROM clients c WHERE c.id = v_client_id;
 
-  SELECT COALESCE(SUM(amount_paid), 0) INTO total_collected
-  FROM installments WHERE client_id = NEW.client_id;
+  total_collected := NEW.total_paid;
 
   IF client_type = 'Regular' THEN
     UPDATE payroll SET trigger_met = (total_collected >= total_contract)
-    WHERE client_id = NEW.client_id AND period = 1;
+    WHERE client_id = v_client_id AND period = 1;
   ELSE
     UPDATE payroll SET trigger_met = (total_collected >= total_contract * 0.50)
-    WHERE client_id = NEW.client_id AND period = 1;
+    WHERE client_id = v_client_id AND period = 1;
     UPDATE payroll SET trigger_met = (total_collected >= total_contract)
-    WHERE client_id = NEW.client_id AND period = 2;
+    WHERE client_id = v_client_id AND period = 2;
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_payroll_trigger
-AFTER INSERT OR UPDATE ON installments
+AFTER UPDATE OF total_paid ON installments
 FOR EACH ROW EXECUTE FUNCTION check_payroll_trigger();
 
 
@@ -339,6 +347,7 @@ ALTER TABLE fm_report_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE writer_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_records ENABLE ROW LEVEL SECURITY;
 
 -- Policies: authenticated users can read and write all tables
 -- Role-specific restrictions are enforced in the application layer via roleGuards.js
@@ -367,6 +376,9 @@ CREATE POLICY "Authenticated users full access to payroll"
 
 CREATE POLICY "Authenticated users full access to writer_assignments"
   ON writer_assignments FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+CREATE POLICY "Authenticated users full access to payment_records"
+  ON payment_records FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 CREATE POLICY "Authenticated users full access to sales_agent_cuts"
   ON sales_agent_cuts FOR ALL TO authenticated USING (true) WITH CHECK (true);

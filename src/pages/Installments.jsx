@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
+import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import InstallmentTable from '../components/installments/InstallmentTable'
 import RecordPaymentModal from '../components/installments/RecordPaymentModal'
+import PaymentHistoryModal from '../components/installments/PaymentHistoryModal'
 import { useInstallments, useRecordPayment } from '../hooks/useInstallments'
 import { useToast } from '../components/ui/Toast'
 
 export default function Installments() {
   const toast = useToast()
-  const [statusFilter, setStatusFilter] = useState('')
-  const { data: installments, isLoading } = useInstallments({ status: statusFilter || undefined })
+  const [filters, setFilters] = useState({ status: '', search: '' })
+  const { data: installments, isLoading } = useInstallments(filters)
   const recordPayment = useRecordPayment()
   const [recording, setRecording] = useState(null)
+  const [viewingHistory, setViewingHistory] = useState(null)
 
   const handleRecordPayment = async (payload) => {
     try {
@@ -29,15 +32,21 @@ export default function Installments() {
 
   return (
     <div>
-      <PageHeader title="Installments" description="Track client payments and record new installments">
+      <PageHeader title="Installments" description="Track client payments — click a row to see payment history">
+        <Input
+          placeholder="Search clients..."
+          value={filters.search}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          className="w-48"
+        />
         <Select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          value={filters.status}
+          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           placeholder="All statuses"
           options={[
             { value: 'Pending', label: 'Pending' },
-            { value: 'Paid', label: 'Paid' },
-            { value: 'Overdue', label: 'Overdue' },
+            { value: 'Partial', label: 'Partial' },
+            { value: 'Fully Paid', label: 'Fully Paid' },
           ]}
         />
       </PageHeader>
@@ -45,7 +54,14 @@ export default function Installments() {
       <InstallmentTable
         installments={installments}
         onRecordPayment={setRecording}
+        onViewHistory={setViewingHistory}
       />
+
+      {installments?.length > 0 && (
+        <div className="mt-3 text-sm text-gray-500 text-right">
+          Showing {installments.length} client{installments.length !== 1 ? 's' : ''}
+        </div>
+      )}
 
       <RecordPaymentModal
         installment={recording}
@@ -53,6 +69,12 @@ export default function Installments() {
         onClose={() => setRecording(null)}
         onSubmit={handleRecordPayment}
         loading={recordPayment.isPending}
+      />
+
+      <PaymentHistoryModal
+        installment={viewingHistory}
+        open={!!viewingHistory}
+        onClose={() => setViewingHistory(null)}
       />
     </div>
   )

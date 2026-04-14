@@ -1,6 +1,6 @@
 import Input from '../ui/Input'
 import Select from '../ui/Select'
-import { CLIENT_TYPES, CLIENT_STATUSES } from '../../utils/constants'
+import { CLIENT_TYPES, CLIENT_STATUSES, LEVELS } from '../../utils/constants'
 import { useActiveWriters } from '../../hooks/useWriters'
 import { useActiveSalesAgents } from '../../hooks/useSalesAgents'
 
@@ -33,6 +33,12 @@ export default function ClientFilters({ filters, onChange }) {
           options={CLIENT_STATUSES.map((s) => ({ value: s, label: s }))}
         />
         <Select
+          value={filters.level || ''}
+          onChange={(e) => update('level', e.target.value)}
+          placeholder="All levels"
+          options={LEVELS.map((l) => ({ value: l, label: l }))}
+        />
+        <Select
           value={filters.writer_id || ''}
           onChange={(e) => update('writer_id', e.target.value)}
           placeholder="All writers"
@@ -43,15 +49,6 @@ export default function ClientFilters({ filters, onChange }) {
           onChange={(e) => update('sales_agent_id', e.target.value)}
           placeholder="All agents"
           options={(agents || []).map((a) => ({ value: a.id, label: a.name }))}
-        />
-        <Select
-          value={filters.is_carry_over ?? ''}
-          onChange={(e) => update('is_carry_over', e.target.value)}
-          placeholder="All clients"
-          options={[
-            { value: 'true', label: 'Carry-over' },
-            { value: 'false', label: 'Non carry-over' },
-          ]}
         />
       </div>
     </div>

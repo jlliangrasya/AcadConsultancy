@@ -11,7 +11,7 @@ export default function OwnerAnalytics() {
     queryFn: () => {
       const db = getMockDB()
       const totalRevenue = db.clients.reduce((s, c) => s + Number(c.total_amount), 0)
-      const totalCollected = db.installments.reduce((s, i) => s + Number(i.amount_paid), 0)
+      const totalCollected = db.installments.reduce((s, i) => s + Number(i.total_paid), 0)
       const totalPayouts = db.payroll.filter((p) => p.first_release_status === 'Released').reduce((s, p) => s + Number(p.first_release), 0)
       const totalAgentPaid = db.salesAgentCuts.filter((c) => c.paid).reduce((s, c) => s + Number(c.cut_amount), 0)
       const totalExpenses = db.expenses.reduce((s, e) => s + Number(e.amount), 0)
