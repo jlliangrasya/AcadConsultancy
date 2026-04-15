@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import FMReportBuilder from '../components/fm-report/FMReportBuilder'
 import FMReportHistory from '../components/fm-report/FMReportHistory'
 import OwnerApprovalPanel from '../components/fm-report/OwnerApprovalPanel'
@@ -79,6 +80,19 @@ export default function FMReport() {
   return (
     <div>
       <PageHeader title="FM Payout Report" description="Create, review, and approve payout reports" />
+
+      <PageGuide
+        id="fm-report"
+        title="How FM Payout Reports work"
+        steps={[
+          'FM creates a report by selecting eligible payroll entries (must be triggered + owner-approved) and unpaid agent commissions.',
+          'FM sets the payout date, adds optional notes, then submits the report to the Owner for approval.',
+          'Only one submitted report can exist at a time — it must be approved or rejected before a new one can be created.',
+          'Owner reviews the report, can download the PDF, and either approves (releases all funds) or returns it to FM.',
+          'On approval: writer first-release payments are marked as Released, and agent commissions are marked as Paid.',
+          'Check the History tab to see all past payout runs with their status and totals.',
+        ]}
+      />
 
       <div className="flex gap-2 mb-6">
         {canDo(role, 'create_fm_report') && (

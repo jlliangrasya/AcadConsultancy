@@ -1,5 +1,5 @@
 -- ============================================================
--- Acad Consultation Management System — Full Database Schema
+-- YTW Writes Management System — Full Database Schema
 -- Run this in your Supabase SQL Editor
 -- ============================================================
 

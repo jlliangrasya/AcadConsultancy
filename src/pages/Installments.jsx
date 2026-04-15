@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import InstallmentTable from '../components/installments/InstallmentTable'
@@ -50,6 +51,18 @@ export default function Installments() {
           ]}
         />
       </PageHeader>
+
+      <PageGuide
+        id="installments"
+        title="How Installments work"
+        steps={[
+          'Each client has one row showing their total amount, how much has been paid, and how many gives have been recorded.',
+          'Click "Record Give X" to log a payment. The system auto-assigns the next give number — you just enter the amount and date.',
+          'Click any row to open the payment history showing all recorded gives with amounts and dates.',
+          'The progress bar shows collection progress. Status changes from Pending → Partial → Fully Paid automatically.',
+          'When enough is collected, the writer\'s payroll trigger updates automatically (50% unlocks Period 1 for Package clients, 100% unlocks Regular).',
+        ]}
+      />
 
       <InstallmentTable
         installments={installments}

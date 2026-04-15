@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import ClientTable from '../components/clients/ClientTable'
@@ -70,6 +71,18 @@ export default function Clients() {
           </Button>
         )}
       </PageHeader>
+
+      <PageGuide
+        id="clients"
+        title="How to manage Clients"
+        steps={[
+          'Click "Add Client" to create a new project. Fill in client info, select Package or Regular, choose inclusions or service availed, and assign a writer.',
+          'Use the filters above the cards to search by name, type, level, status, writer, or agent.',
+          'Click the eye icon on any card to view full details and use the "Copy Details" button to copy formatted client info for messaging.',
+          'Click the pencil icon to edit, or the trash icon to archive a client (financial history is preserved).',
+          'Package clients show blue inclusion tags. Regular clients show the service availed.',
+        ]}
+      />
 
       <ClientFilters filters={filters} onChange={setFilters} />
 

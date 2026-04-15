@@ -13,7 +13,7 @@ export function addPDFFooter(doc, pageCount) {
     doc.setPage(i)
     doc.setFontSize(8)
     doc.setTextColor(128)
-    doc.text('CONFIDENTIAL — Acad Consultation', 14, 285)
+    doc.text('CONFIDENTIAL — YTW Writes', 14, 285)
     doc.text(`Page ${i} of ${pageCount}`, 180, 285)
   }
 }

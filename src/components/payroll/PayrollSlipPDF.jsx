@@ -6,7 +6,7 @@ export function generatePayrollSlipPDF(row) {
 
   // Header
   doc.setFontSize(16)
-  doc.text('Acad Consultation', 14, y)
+  doc.text('YTW Writes', 14, y)
   y += 8
   doc.setFontSize(12)
   doc.text('Payroll Slip', 14, y)
@@ -43,7 +43,7 @@ export function generatePayrollSlipPDF(row) {
   y += 10
   doc.setFontSize(8)
   doc.setTextColor(128)
-  doc.text('CONFIDENTIAL — Acad Consultation', 14, y)
+  doc.text('CONFIDENTIAL — YTW Writes', 14, y)
 
   const clientName = (row.clients?.name || 'unknown').replace(/\s+/g, '-')
   doc.save(`payroll-slip-${clientName}-P${row.period}.pdf`)

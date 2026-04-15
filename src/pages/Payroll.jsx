@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import PayrollTable from '../components/payroll/PayrollTable'
 import PayrollSlipModal from '../components/payroll/PayrollSlipModal'
 import {
@@ -73,6 +74,19 @@ export default function Payroll() {
       <PageHeader
         title="Payroll"
         description="Manage writer payroll — penalties, approvals, releases, and retention"
+      />
+
+      <PageGuide
+        id="payroll"
+        title="How Payroll works"
+        steps={[
+          'Writer cut is 30% of the client\'s total contract. Package clients split into 2 periods, Regular clients have 1 period.',
+          '"Trigger" column shows if enough client payment has been collected. This updates automatically when installments are recorded.',
+          'FM can set a penalty % (click the pencil icon) — this reduces the net receivable before the 90/10 split.',
+          'Owner must click "Approve" before any payment can be released. Then FM clicks "Release" to issue the first 90% payment.',
+          'After the work is done, FM checks "Feedback" and "Revision" boxes. Once both are checked, the remaining 10% retention can be released.',
+          'Click "Slip" to view or download a PDF payroll slip for any entry.',
+        ]}
       />
 
       <PayrollTable

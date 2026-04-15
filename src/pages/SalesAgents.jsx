@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import AgentTable from '../components/sales-agents/AgentTable'
@@ -65,6 +66,17 @@ export default function SalesAgents() {
           </Button>
         )}
       </PageHeader>
+
+      <PageGuide
+        id="sales-agents"
+        title="How Sales Agents work"
+        steps={[
+          'Sales agents are people who refer clients. They earn a flat peso commission per client, set manually by the FM.',
+          'Click the eye icon to see an agent\'s full client list, total earned, and pending commissions.',
+          'Agent commissions are included in the FM Payout Report alongside writer payments. They get paid when the Owner approves the report.',
+          'The commission amount is NOT auto-computed — FM enters a custom amount per client.',
+        ]}
+      />
 
       <AgentTable
         agents={agents}

@@ -43,7 +43,7 @@ export default function Navbar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col min-h-screen">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">Acad Consultation</h1>
+        <h1 className="text-xl font-bold text-gray-900">YTW Writes</h1>
         <p className="text-sm text-gray-500 mt-1">{user?.full_name}</p>
         <p className="text-xs text-gray-400 capitalize">{role}</p>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import WriterTable from '../components/writers/WriterTable'
@@ -65,6 +66,17 @@ export default function Writers() {
           </Button>
         )}
       </PageHeader>
+
+      <PageGuide
+        id="writers"
+        title="How to manage Writers"
+        steps={[
+          'Writers are people who do the actual academic work. They don\'t have system logins — they are tracked as entities.',
+          'Click "Add Writer" to register a new writer with their name, email, and contact number.',
+          'Click the eye icon to see all projects assigned to a writer and their payroll status.',
+          'Use the toggle icon to activate or deactivate a writer. Inactive writers won\'t appear in dropdowns when adding new clients.',
+        ]}
+      />
 
       <WriterTable
         writers={writers}

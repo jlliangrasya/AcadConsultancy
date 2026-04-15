@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getMockDB } from '../lib/mockData'
 import PageHeader from '../components/layout/PageHeader'
+import PageGuide from '../components/ui/PageGuide'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import { Table, Thead, Tbody, Th, Td, EmptyRow } from '../components/ui/Table'
@@ -35,6 +36,17 @@ export default function AuditLog() {
   return (
     <div>
       <PageHeader title="Audit Log" description="Complete history of all system actions" />
+
+      <PageGuide
+        id="audit-log"
+        title="About the Audit Log"
+        steps={[
+          'Every action in the system is logged here — client additions, payment recordings, penalty changes, payroll approvals, report submissions, and more.',
+          'Use the search box to find specific events by description, or filter by action type using the dropdown.',
+          'Each entry shows the timestamp, what was done, which entity was affected, and who performed the action.',
+        ]}
+      />
+
       <div className="flex gap-3 mb-4">
         <Input placeholder="Search descriptions..." value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} className="w-64" />
         <Select value={filters.action} onChange={(e) => setFilters({ ...filters, action: e.target.value })} placeholder="All actions" options={actionOptions} />
