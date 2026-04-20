@@ -3,6 +3,7 @@ import PageHeader from '../components/layout/PageHeader'
 import PageGuide from '../components/ui/PageGuide'
 import PayrollTable from '../components/payroll/PayrollTable'
 import PayrollSlipModal from '../components/payroll/PayrollSlipModal'
+import PenaltyHistoryModal from '../components/payroll/PenaltyHistoryModal'
 import {
   usePayroll,
   useSetPenalty,
@@ -22,6 +23,7 @@ export default function Payroll() {
   const markFR = useMarkFeedbackRevision()
   const releaseRetention = useReleaseRetention()
   const [viewingSlip, setViewingSlip] = useState(null)
+  const [viewingPenaltyHistory, setViewingPenaltyHistory] = useState(null)
 
   const handleSetPenalty = async (id, pct, reason) => {
     try {
@@ -98,12 +100,19 @@ export default function Payroll() {
         onToggleRevision={handleToggleRevision}
         onReleaseRetention={handleReleaseRetention}
         onViewSlip={setViewingSlip}
+        onViewPenaltyHistory={setViewingPenaltyHistory}
       />
 
       <PayrollSlipModal
         row={viewingSlip}
         open={!!viewingSlip}
         onClose={() => setViewingSlip(null)}
+      />
+
+      <PenaltyHistoryModal
+        payrollRow={viewingPenaltyHistory}
+        open={!!viewingPenaltyHistory}
+        onClose={() => setViewingPenaltyHistory(null)}
       />
     </div>
   )

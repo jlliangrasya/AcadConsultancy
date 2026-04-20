@@ -5,7 +5,7 @@ import PenaltyInput from './PenaltyInput'
 import { formatCurrency } from '../../utils/formatters'
 import { canDo } from '../../utils/roleGuards'
 import useAppStore from '../../store/useAppStore'
-import { CheckSquare, Square } from 'lucide-react'
+import { CheckSquare, Square, History } from 'lucide-react'
 
 export default function PayrollRow({
   row,
@@ -16,6 +16,7 @@ export default function PayrollRow({
   onToggleRevision,
   onReleaseRetention,
   onViewSlip,
+  onViewPenaltyHistory,
 }) {
   const role = useAppStore((s) => s.role)
 
@@ -31,17 +32,26 @@ export default function PayrollRow({
       <Td>P{row.period}</Td>
       <Td>{formatCurrency(row.gross_amount)}</Td>
       <Td>
-        {canDo(role, 'set_penalty') ? (
-          <PenaltyInput
-            currentPct={row.penalty_pct}
-            currentReason={row.penalty_reason}
-            onSave={(pct, reason) => onSetPenalty(row.id, pct, reason)}
-          />
-        ) : (
-          <span className={Number(row.penalty_pct) > 0 ? 'text-red-600' : ''}>
-            {row.penalty_pct}%
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {canDo(role, 'set_penalty') ? (
+            <PenaltyInput
+              currentPct={row.penalty_pct}
+              currentReason={row.penalty_reason}
+              onSave={(pct, reason) => onSetPenalty(row.id, pct, reason)}
+            />
+          ) : (
+            <span className={Number(row.penalty_pct) > 0 ? 'text-red-600' : ''}>
+              {row.penalty_pct}%
+            </span>
+          )}
+          <button
+            onClick={() => onViewPenaltyHistory(row)}
+            className="p-1 text-gray-400 hover:text-blue-600 rounded"
+            title="Penalty history"
+          >
+            <History size={12} />
+          </button>
+        </div>
       </Td>
       <Td>{formatCurrency(row.net_receivable)}</Td>
       <Td>{formatCurrency(row.first_release)}</Td>

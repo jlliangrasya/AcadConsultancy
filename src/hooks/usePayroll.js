@@ -31,14 +31,28 @@ export function useSetPenalty() {
       const db = getMockDB()
       const row = db.payroll.find((p) => p.id === id)
       if (!row) throw new Error('Payroll entry not found')
-      row.penalty_pct = penalty_pct
+
+      const oldPct = row.penalty_pct
+      // Record penalty history
+      db.penaltyHistory.push({
+        id: uuid(),
+        payroll_id: id,
+        old_pct: oldPct,
+        new_pct: Number(penalty_pct),
+        reason: penalty_reason || '',
+        changed_by: user?.id,
+        changed_by_name: user?.full_name || 'System',
+        changed_at: new Date().toISOString(),
+      })
+
+      row.penalty_pct = Number(penalty_pct)
       row.penalty_reason = penalty_reason
       row.penalty_set_by = user?.id
       row.penalty_set_at = new Date().toISOString()
       recalcPayrollAmounts(row)
       db.auditLogs.unshift({
         id: uuid(), action: 'set_penalty', entity: 'payroll', entity_id: id,
-        description: `Set penalty ${penalty_pct}% — ${penalty_reason || 'no reason'}`,
+        description: `Penalty changed ${oldPct}% → ${penalty_pct}% — ${penalty_reason || 'no reason'}`,
         old_value: null, new_value: null, performed_by: user?.id,
         created_at: new Date().toISOString(),
         user_profiles: { full_name: user?.full_name || 'System' },
@@ -47,7 +61,21 @@ export function useSetPenalty() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payroll'] })
+      queryClient.invalidateQueries({ queryKey: ['penaltyHistory'] })
       queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
+    },
+  })
+}
+
+export function usePenaltyHistory(payrollId) {
+  return useQuery({
+    queryKey: ['penaltyHistory', payrollId],
+    enabled: !!payrollId,
+    queryFn: () => {
+      const db = getMockDB()
+      return db.penaltyHistory
+        .filter((h) => h.payroll_id === payrollId)
+        .sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at))
     },
   })
 }

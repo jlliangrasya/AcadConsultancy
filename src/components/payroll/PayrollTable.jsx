@@ -10,6 +10,7 @@ export default function PayrollTable({
   onToggleRevision,
   onReleaseRetention,
   onViewSlip,
+  onViewPenaltyHistory,
 }) {
   return (
     <Table>
@@ -48,6 +49,7 @@ export default function PayrollTable({
               onToggleRevision={onToggleRevision}
               onReleaseRetention={onReleaseRetention}
               onViewSlip={onViewSlip}
+              onViewPenaltyHistory={onViewPenaltyHistory}
             />
           ))
         )}

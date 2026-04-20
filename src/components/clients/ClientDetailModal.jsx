@@ -5,9 +5,17 @@ import Modal from '../ui/Modal'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import PaperReleaseCell from './PaperReleaseCell'
+import CommunicationLog from './CommunicationLog'
+import AgentCutCell from './AgentCutCell'
+import WriterReassignModal from './WriterReassignModal'
+import CompleteClientModal from './CompleteClientModal'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { formatClientForCopy } from '../../utils/clientCopyFormatter'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, UserCog, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { useSetClientStatus } from '../../hooks/useClients'
+import { useToast } from '../ui/Toast'
+import { canDo } from '../../utils/roleGuards'
+import useAppStore from '../../store/useAppStore'
 
 function DetailRow({ label, value, className = '' }) {
   if (!value) return null
@@ -20,7 +28,12 @@ function DetailRow({ label, value, className = '' }) {
 }
 
 export default function ClientDetailModal({ client, open, onClose }) {
+  const role = useAppStore((s) => s.role)
+  const toast = useToast()
   const [copied, setCopied] = useState(false)
+  const [reassignOpen, setReassignOpen] = useState(false)
+  const [completeOpen, setCompleteOpen] = useState(false)
+  const setStatus = useSetClientStatus()
 
   const { data: installment } = useQuery({
     queryKey: ['clientInstallment', client?.id],
@@ -42,118 +55,167 @@ export default function ClientDetailModal({ client, open, onClose }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleMarkOverdue = async () => {
+    try {
+      await setStatus.mutateAsync({ clientId: client.id, status: 'Overdue' })
+      toast.success('Client marked as Overdue')
+    } catch (err) { toast.error(err.message) }
+  }
+
+  const handleClearOverdue = async () => {
+    try {
+      await setStatus.mutateAsync({ clientId: client.id, status: 'Active' })
+      toast.success('Client restored to Active')
+    } catch (err) { toast.error(err.message) }
+  }
+
   return (
-    <Modal open={open} onClose={onClose} title="Client Details" size="lg">
-      <div className="space-y-5">
-        {/* Header with copy */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">{client.name}</h2>
-            <p className="text-sm text-gray-500">{client.project_name}</p>
+    <>
+      <Modal open={open} onClose={onClose} title="Client Details" size="lg">
+        <div className="space-y-5">
+          {/* Header with actions */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">{client.name}</h2>
+              <p className="text-sm text-gray-500">{client.project_name}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant={copied ? 'success' : 'primary'} onClick={handleCopy}>
+                {copied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy Details</>}
+              </Button>
+            </div>
           </div>
-          <Button variant={copied ? 'success' : 'primary'} onClick={handleCopy}>
-            {copied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy Details</>}
-          </Button>
-        </div>
 
-        {/* Status badges */}
-        <div className="flex items-center gap-2">
-          <Badge>{client.type}</Badge>
-          <Badge>{client.status}</Badge>
-          {client.is_carry_over && <Badge color="purple">Carry-over</Badge>}
-          {client.level && <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">{client.level}</span>}
-        </div>
-
-        {/* Client Info */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Client Information</h4>
-          <div className="grid grid-cols-3 gap-4">
-            <DetailRow label="FB Name / Contact" value={client.name} />
-            <DetailRow label="Contact" value={client.contact} />
-            <DetailRow label="Level" value={client.level} />
-            <DetailRow label="Program / Course" value={client.program} />
-            <DetailRow label="School" value={client.school} />
-            <DetailRow label="Referred by" value={client.referred_by} />
-            <DetailRow label="Referral Source" value={client.referral_source} />
+          {/* Status badges + quick actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge>{client.type}</Badge>
+            <Badge>{client.status}</Badge>
+            {client.is_carry_over && <Badge color="purple">Carry-over</Badge>}
+            {client.level && <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">{client.level}</span>}
           </div>
-        </div>
 
-        {/* Financials */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Financials</h4>
-          <div className="grid grid-cols-4 gap-4">
-            <DetailRow label="Total Amount" value={formatCurrency(client.total_amount)} />
-            <DetailRow label="Gives" value={`${client.gives} give${client.gives > 1 ? 's' : ''}`} />
-            <DetailRow label="Per Give" value={formatCurrency(client.total_amount / client.gives)} />
-            <DetailRow label="Financing" value={client.gives > 1 ? `${Math.round(100 / client.gives)}% DP` : 'Full payment'} />
+          {/* Status quick actions */}
+          {canDo(role, 'edit_client') && client.status !== 'Completed' && (
+            <div className="flex flex-wrap gap-2">
+              {client.status !== 'Overdue' && (
+                <Button size="sm" variant="secondary" onClick={handleMarkOverdue}>
+                  <AlertTriangle size={14} /> Mark Overdue
+                </Button>
+              )}
+              {client.status === 'Overdue' && (
+                <Button size="sm" variant="secondary" onClick={handleClearOverdue}>
+                  Restore to Active
+                </Button>
+              )}
+              <Button size="sm" variant="secondary" onClick={() => setReassignOpen(true)}>
+                <UserCog size={14} /> Reassign Writer
+              </Button>
+              <Button size="sm" variant="success" onClick={() => setCompleteOpen(true)}>
+                <CheckCircle2 size={14} /> Complete Project
+              </Button>
+            </div>
+          )}
+
+          {/* Client Info */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Client Information</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <DetailRow label="FB Name / Contact" value={client.name} />
+              <DetailRow label="Contact" value={client.contact} />
+              <DetailRow label="Level" value={client.level} />
+              <DetailRow label="Program / Course" value={client.program} />
+              <DetailRow label="School" value={client.school} />
+              <DetailRow label="Referred by" value={client.referred_by} />
+              <DetailRow label="Referral Source" value={client.referral_source} />
+            </div>
           </div>
-          {installment && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Collected: <strong className="text-green-700">{formatCurrency(installment.total_paid)}</strong></span>
-                <span className="text-gray-500">Remaining: <strong className="text-red-600">{formatCurrency(installment.total_amount - installment.total_paid)}</strong></span>
-                <Badge>{installment.status}</Badge>
+
+          {/* Financials */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Financials</h4>
+            <div className="grid grid-cols-4 gap-4">
+              <DetailRow label="Total Amount" value={formatCurrency(client.total_amount)} />
+              <DetailRow label="Gives" value={`${client.gives} give${client.gives > 1 ? 's' : ''}`} />
+              <DetailRow label="Per Give" value={formatCurrency(client.total_amount / client.gives)} />
+              <DetailRow label="Financing" value={client.gives > 1 ? `${Math.round(100 / client.gives)}% DP` : 'Full payment'} />
+            </div>
+            {installment && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Collected: <strong className="text-green-700">{formatCurrency(installment.total_paid)}</strong></span>
+                  <span className="text-gray-500">Remaining: <strong className="text-red-600">{formatCurrency(installment.total_amount - installment.total_paid)}</strong></span>
+                  <Badge>{installment.status}</Badge>
+                </div>
               </div>
+            )}
+          </div>
+
+          {/* Agent cut (inline editable) */}
+          <AgentCutCell clientId={client.id} />
+
+          {/* Service / Package details */}
+          {isPackage && client.package_inclusions?.length > 0 && (
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-blue-600 uppercase mb-3">Package Inclusions</h4>
+              <div className="flex flex-wrap gap-2">
+                {client.package_inclusions.map((inc) => (
+                  <span key={inc} className="bg-white border border-blue-200 text-blue-800 text-sm px-3 py-1 rounded-lg">
+                    {inc === 'Validator' && client.validator_count > 1 ? `${client.validator_count} Validators` :
+                     inc === 'Extra RRLs' && client.extra_rrls_count > 1 ? `${client.extra_rrls_count} Extra RRLs` :
+                     inc === 'Validator' ? `${client.validator_count || 1} Validator` :
+                     inc === 'Extra RRLs' ? `${client.extra_rrls_count || 1} Extra RRLs` :
+                     inc}
+                  </span>
+                ))}
+              </div>
+              {client.revision_notes && (
+                <div className="mt-3 text-sm text-blue-700">Revisions: {client.revision_notes}</div>
+              )}
+            </div>
+          )}
+          {!isPackage && client.service_availed && (
+            <div className="bg-green-50 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-green-600 uppercase mb-2">Service Availed</h4>
+              <p className="text-sm text-green-800">{client.service_availed}</p>
+            </div>
+          )}
+
+          {/* Schedule & Assignment */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Schedule & Assignment</h4>
+            <div className="grid grid-cols-4 gap-4">
+              <DetailRow label="Writer" value={client.writers?.name} />
+              <DetailRow label="Sales Agent" value={client.sales_agents?.name} />
+              <DetailRow label="Start Date" value={formatDate(client.start_date)} />
+              <DetailRow label="Due Date" value={formatDate(client.due_date)} />
+              <DetailRow label="Latest Deadline" value={client.latest_deadline} />
+              <DetailRow label="Year / Batch" value={client.year_batch} />
+            </div>
+          </div>
+
+          {/* Paper releases */}
+          {client.paper_releases?.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">Paper releases:</span>
+              <PaperReleaseCell clientId={client.id} releases={client.paper_releases} />
+            </div>
+          )}
+
+          {/* Communication log */}
+          <CommunicationLog clientId={client.id} />
+
+          {/* Notes */}
+          {client.notes && (
+            <div className="text-sm text-gray-600 bg-yellow-50 rounded-lg p-3">
+              <span className="text-xs text-gray-400 block mb-1">Notes</span>
+              {client.notes}
             </div>
           )}
         </div>
+      </Modal>
 
-        {/* Service / Package details */}
-        {isPackage && client.package_inclusions?.length > 0 && (
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h4 className="text-xs font-semibold text-blue-600 uppercase mb-3">Package Inclusions</h4>
-            <div className="flex flex-wrap gap-2">
-              {client.package_inclusions.map((inc) => (
-                <span key={inc} className="bg-white border border-blue-200 text-blue-800 text-sm px-3 py-1 rounded-lg">
-                  {inc === 'Validator' && client.validator_count > 1 ? `${client.validator_count} Validators` :
-                   inc === 'Extra RRLs' && client.extra_rrls_count > 1 ? `${client.extra_rrls_count} Extra RRLs` :
-                   inc === 'Validator' ? `${client.validator_count || 1} Validator` :
-                   inc === 'Extra RRLs' ? `${client.extra_rrls_count || 1} Extra RRLs` :
-                   inc}
-                </span>
-              ))}
-            </div>
-            {client.revision_notes && (
-              <div className="mt-3 text-sm text-blue-700">Revisions: {client.revision_notes}</div>
-            )}
-          </div>
-        )}
-        {!isPackage && client.service_availed && (
-          <div className="bg-green-50 rounded-lg p-4">
-            <h4 className="text-xs font-semibold text-green-600 uppercase mb-2">Service Availed</h4>
-            <p className="text-sm text-green-800">{client.service_availed}</p>
-          </div>
-        )}
-
-        {/* Schedule & Assignment */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Schedule & Assignment</h4>
-          <div className="grid grid-cols-4 gap-4">
-            <DetailRow label="Writer" value={client.writers?.name} />
-            <DetailRow label="Sales Agent" value={client.sales_agents?.name} />
-            <DetailRow label="Start Date" value={formatDate(client.start_date)} />
-            <DetailRow label="Due Date" value={formatDate(client.due_date)} />
-            <DetailRow label="Latest Deadline" value={client.latest_deadline} />
-            <DetailRow label="Year / Batch" value={client.year_batch} />
-          </div>
-        </div>
-
-        {/* Paper releases */}
-        {client.paper_releases?.length > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500">Paper releases:</span>
-            <PaperReleaseCell clientId={client.id} releases={client.paper_releases} />
-          </div>
-        )}
-
-        {/* Notes */}
-        {client.notes && (
-          <div className="text-sm text-gray-600 bg-yellow-50 rounded-lg p-3">
-            <span className="text-xs text-gray-400 block mb-1">Notes</span>
-            {client.notes}
-          </div>
-        )}
-      </div>
-    </Modal>
+      <WriterReassignModal client={client} open={reassignOpen} onClose={() => setReassignOpen(false)} />
+      <CompleteClientModal client={client} open={completeOpen} onClose={() => setCompleteOpen(false)} />
+    </>
   )
 }

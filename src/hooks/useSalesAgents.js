@@ -83,3 +83,46 @@ export function useAgentEarnings(agentId) {
     },
   })
 }
+
+export function useClientAgentCut(clientId) {
+  return useQuery({
+    queryKey: ['clientAgentCut', clientId],
+    enabled: !!clientId,
+    queryFn: () => {
+      const db = getMockDB()
+      return db.salesAgentCuts.find((c) => c.client_id === clientId) || null
+    },
+  })
+}
+
+export function useUpdateAgentCut() {
+  const queryClient = useQueryClient()
+  const user = useAppStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: async ({ clientId, cutAmount, cutNotes }) => {
+      const db = getMockDB()
+      const cut = db.salesAgentCuts.find((c) => c.client_id === clientId)
+      if (!cut) throw new Error('No agent cut found for this client')
+      const oldAmount = cut.cut_amount
+      cut.cut_amount = Number(cutAmount)
+      cut.cut_notes = cutNotes || null
+      cut.set_by = user?.id
+      cut.set_at = new Date().toISOString()
+      db.auditLogs.unshift({
+        id: uuid(), action: 'set_agent_cut', entity: 'sales_agent_cut', entity_id: cut.id,
+        description: `Updated agent cut for ${cut.clients?.name}: ₱${oldAmount} → ₱${cutAmount}`,
+        old_value: null, new_value: null, performed_by: user?.id,
+        created_at: new Date().toISOString(),
+        user_profiles: { full_name: user?.full_name || 'System' },
+      })
+      return cut
+    },
+    onSuccess: (_, { clientId }) => {
+      queryClient.invalidateQueries({ queryKey: ['clientAgentCut', clientId] })
+      queryClient.invalidateQueries({ queryKey: ['salesAgentCuts'] })
+      queryClient.invalidateQueries({ queryKey: ['agentEarnings'] })
+      queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
+    },
+  })
+}

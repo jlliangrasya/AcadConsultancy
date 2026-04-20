@@ -10,6 +10,8 @@ import {
   BarChart3,
   LogOut,
   ScrollText,
+  UserPlus,
+  Receipt,
 } from 'lucide-react'
 import useAppStore from '../../store/useAppStore'
 import { canDo } from '../../utils/roleGuards'
@@ -17,13 +19,15 @@ import { canDo } from '../../utils/roleGuards'
 const allNavItems = [
   { to: '/',              label: 'Dashboard',        icon: LayoutDashboard, permission: null },
   { to: '/owner-dashboard', label: 'Analytics',      icon: BarChart3,       permission: 'view_owner_dash' },
+  { to: '/leads',        label: 'Leads',             icon: UserPlus,        permission: 'view_leads' },
   { to: '/clients',      label: 'Clients',           icon: Users,           permission: null },
   { to: '/installments', label: 'Installments',      icon: CreditCard,      permission: 'view_installments' },
   { to: '/payroll',      label: 'Payroll',           icon: FileText,        permission: 'view_payroll' },
   { to: '/fm-report',    label: 'FM Report',         icon: ClipboardList,   permission: 'view_payroll' },
   { to: '/sales-agents', label: 'Sales Agents',      icon: UserCheck,       permission: 'view_agents' },
   { to: '/writers',      label: 'Writers',           icon: PenTool,         permission: 'manage_writers' },
-  { to: '/audit-log',   label: 'Audit Log',         icon: ScrollText,      permission: 'view_payroll' },
+  { to: '/expenses',     label: 'Expenses',          icon: Receipt,         permission: 'view_expenses' },
+  { to: '/audit-log',    label: 'Audit Log',         icon: ScrollText,      permission: 'view_payroll' },
 ]
 
 export default function Navbar() {

@@ -38,41 +38,69 @@ function recalcPayrollTriggers(db, clientId) {
   })
 }
 
+// Recompute current_give based on cumulative total_paid vs per-give amount
+function recomputeCurrentGive(inst) {
+  const perGive = Number(inst.total_amount) / Number(inst.gives)
+  // current_give = number of completed gives (fully paid gives)
+  const completed = Math.floor((inst.total_paid + 0.001) / perGive)
+  inst.current_give = Math.min(completed, inst.gives)
+}
+
 export function useRecordPayment() {
   const queryClient = useQueryClient()
   const user = useAppStore((s) => s.user)
 
   return useMutation({
-    mutationFn: async ({ installmentId, amount, datePaid }) => {
+    mutationFn: async ({ installmentId, amount, datePaid, giveNumber, notes }) => {
       const db = getMockDB()
       const inst = db.installments.find((i) => i.id === installmentId)
       if (!inst) throw new Error('Installment not found')
 
-      if (inst.total_paid >= inst.total_amount) {
-        throw new Error('This client is already fully paid')
+      const remaining = Number(inst.total_amount) - Number(inst.total_paid)
+      if (Number(amount) > remaining + 0.001) {
+        throw new Error(`Amount exceeds remaining balance of ₱${remaining.toLocaleString()}`)
+      }
+      if (Number(amount) <= 0) {
+        throw new Error('Amount must be greater than 0')
       }
 
-      const nextGive = inst.current_give + 1
-      if (nextGive > inst.gives) {
-        throw new Error('All gives have been recorded')
+      // Determine which give this payment applies to
+      // If caller specifies giveNumber, use it; else, use the next give that isn't fully paid
+      const perGive = Number(inst.total_amount) / Number(inst.gives)
+      let targetGive = giveNumber
+      if (!targetGive) {
+        // Find the first give that isn't fully paid
+        const paidByGive = {}
+        inst.payments.forEach((p) => {
+          paidByGive[p.give_number] = (paidByGive[p.give_number] || 0) + Number(p.amount)
+        })
+        for (let g = 1; g <= inst.gives; g++) {
+          if ((paidByGive[g] || 0) < perGive - 0.001) {
+            targetGive = g
+            break
+          }
+        }
+        if (!targetGive) targetGive = inst.gives
       }
 
       // Add payment record
       const payment = {
         id: uuid(),
         installment_id: installmentId,
-        give_number: nextGive,
+        give_number: Number(targetGive),
         amount: Number(amount),
         date_paid: datePaid || new Date().toISOString().split('T')[0],
+        notes: notes || '',
         recorded_by: user?.id,
+        recorded_by_name: user?.full_name || 'System',
         recorded_at: new Date().toISOString(),
       }
       inst.payments.push(payment)
 
       // Update totals
       inst.total_paid = Number(inst.total_paid) + Number(amount)
-      inst.current_give = nextGive
-      inst.status = inst.total_paid >= inst.total_amount ? 'Fully Paid' : 'Partial'
+      recomputeCurrentGive(inst)
+      inst.status = inst.total_paid >= inst.total_amount - 0.001 ? 'Fully Paid' : (inst.total_paid > 0 ? 'Partial' : 'Pending')
       inst.updated_at = new Date().toISOString()
 
       // Recalculate payroll triggers
@@ -80,7 +108,7 @@ export function useRecordPayment() {
 
       db.auditLogs.unshift({
         id: uuid(), action: 'record_payment', entity: 'installment', entity_id: installmentId,
-        description: `Recorded Give ${nextGive} payment of ₱${Number(amount).toLocaleString()} for ${inst.clients?.name}`,
+        description: `Recorded payment of ₱${Number(amount).toLocaleString()} toward Give ${targetGive} for ${inst.clients?.name}`,
         old_value: null, new_value: null, performed_by: user?.id,
         created_at: new Date().toISOString(),
         user_profiles: { full_name: user?.full_name || 'System' },
@@ -97,4 +125,26 @@ export function useRecordPayment() {
       queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
     },
   })
+}
+
+// Helper: compute per-give paid amounts
+export function computeGiveBreakdown(inst) {
+  if (!inst) return []
+  const perGive = Number(inst.total_amount) / Number(inst.gives)
+  const paidByGive = {}
+  inst.payments.forEach((p) => {
+    paidByGive[p.give_number] = (paidByGive[p.give_number] || 0) + Number(p.amount)
+  })
+  const result = []
+  for (let g = 1; g <= inst.gives; g++) {
+    const paid = paidByGive[g] || 0
+    result.push({
+      give: g,
+      due: perGive,
+      paid,
+      remaining: Math.max(perGive - paid, 0),
+      status: paid >= perGive - 0.001 ? 'Fully Paid' : paid > 0 ? 'Partial' : 'Pending',
+    })
+  }
+  return result
 }

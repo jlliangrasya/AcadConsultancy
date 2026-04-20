@@ -15,6 +15,8 @@ import SalesAgents from './pages/SalesAgents'
 import Writers from './pages/Writers'
 import OwnerDashboard from './pages/OwnerDashboard'
 import AuditLog from './pages/AuditLog'
+import Leads from './pages/Leads'
+import Expenses from './pages/Expenses'
 
 function AppLayout({ children }) {
   return (
@@ -96,6 +98,22 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.FM, ROLES.OWNER]}>
               <AuditLog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leads"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.OPS, ROLES.FM, ROLES.OWNER]}>
+              <Leads />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/expenses"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.FM, ROLES.OWNER]}>
+              <Expenses />
             </ProtectedRoute>
           }
         />

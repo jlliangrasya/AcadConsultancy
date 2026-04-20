@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import PageHeader from '../components/layout/PageHeader'
 import PageGuide from '../components/ui/PageGuide'
 import Button from '../components/ui/Button'
@@ -8,7 +8,8 @@ import ClientTable from '../components/clients/ClientTable'
 import ClientForm from '../components/clients/ClientForm'
 import ClientFilters from '../components/clients/ClientFilters'
 import ClientDetailModal from '../components/clients/ClientDetailModal'
-import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from '../hooks/useClients'
+import CarryOverModal from '../components/clients/CarryOverModal'
+import { useClients, useCreateClient, useUpdateClient, useDeleteClient, findDuplicateClients } from '../hooks/useClients'
 import { useToast } from '../components/ui/Toast'
 import { canDo } from '../utils/roleGuards'
 import useAppStore from '../store/useAppStore'
@@ -27,15 +28,27 @@ export default function Clients() {
   const [editing, setEditing] = useState(null)
   const [viewing, setViewing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [duplicateWarning, setDuplicateWarning] = useState(null)
+  const [carryOverOpen, setCarryOverOpen] = useState(false)
 
-  const handleAdd = async (form) => {
+  const performAdd = async (form) => {
     try {
       await createClient.mutateAsync(form)
       toast.success('Client added successfully')
       setShowForm(false)
+      setDuplicateWarning(null)
     } catch (err) {
       toast.error(err.message)
     }
+  }
+
+  const handleAdd = async (form) => {
+    const duplicates = findDuplicateClients(form)
+    if (duplicates.length > 0) {
+      setDuplicateWarning({ form, duplicates })
+      return
+    }
+    await performAdd(form)
   }
 
   const handleEdit = async (form) => {
@@ -65,6 +78,11 @@ export default function Clients() {
   return (
     <div>
       <PageHeader title="Clients" description="Manage all client projects and assignments">
+        {canDo(role, 'edit_client') && (
+          <Button variant="secondary" onClick={() => setCarryOverOpen(true)}>
+            <Calendar size={16} /> Year-End Carry-over
+          </Button>
+        )}
         {canDo(role, 'add_client') && (
           <Button onClick={() => setShowForm(true)}>
             <Plus size={16} /> Add Client
@@ -117,6 +135,8 @@ export default function Clients() {
         onClose={() => setViewing(null)}
       />
 
+      <CarryOverModal open={carryOverOpen} onClose={() => setCarryOverOpen(false)} />
+
       <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Archive Client" size="sm">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
@@ -126,6 +146,31 @@ export default function Clients() {
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setConfirmDelete(null)}>Cancel</Button>
             <Button variant="danger" onClick={handleDelete} loading={deleteClient.isPending}>Archive</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!duplicateWarning} onClose={() => setDuplicateWarning(null)} title="Possible Duplicate Client" size="md">
+        <div className="space-y-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+            A client with similar name and project/service already exists. Please review before adding:
+          </div>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {duplicateWarning?.duplicates.map((d) => (
+              <div key={d.id} className="bg-gray-50 rounded-lg p-3 text-sm">
+                <p className="font-semibold text-gray-900">{d.name}</p>
+                <p className="text-gray-600">{d.project_name}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {d.type} • ₱{Number(d.total_amount).toLocaleString()} • {d.status}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setDuplicateWarning(null)}>Go Back & Edit</Button>
+            <Button variant="danger" onClick={() => performAdd(duplicateWarning.form)} loading={createClient.isPending}>
+              Add Anyway
+            </Button>
           </div>
         </div>
       </Modal>

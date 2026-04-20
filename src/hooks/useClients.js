@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getMockDB, uuid } from '../lib/mockData'
+import { checkAndFlagOverdue } from '../lib/overdueChecker'
 import useAppStore from '../store/useAppStore'
 
 export function useClients(filters = {}) {
   return useQuery({
     queryKey: ['clients', filters],
     queryFn: () => {
+      checkAndFlagOverdue()
       const db = getMockDB()
       let results = [...db.clients]
 
@@ -30,6 +32,22 @@ export function useClients(filters = {}) {
 
       return results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     },
+  })
+}
+
+// Checks for duplicate clients — same name (case-insensitive), same project, same total amount
+export function findDuplicateClients(clientData) {
+  const db = getMockDB()
+  const nameLower = (clientData.name || '').trim().toLowerCase()
+  const projectLower = (clientData.project_name || '').trim().toLowerCase()
+  const amount = Number(clientData.total_amount)
+
+  return db.clients.filter((c) => {
+    const sameName = c.name?.trim().toLowerCase() === nameLower
+    const sameProject = c.project_name?.trim().toLowerCase() === projectLower
+    const sameAmount = Number(c.total_amount) === amount
+    const sameService = c.type === clientData.type
+    return sameName && (sameProject || (sameAmount && sameService))
   })
 }
 
@@ -106,6 +124,22 @@ export function useCreateClient() {
           paid: false, paid_at: null, paid_by: null, fm_report_id: null,
           clients: { name: clientData.name, project_name: clientData.project_name, type: clientData.type, status: 'Active' },
           sales_agents: agent ? { name: agent.name } : null,
+        })
+      }
+
+      // Writer assignment record
+      if (writer) {
+        db.writerAssignments.push({
+          id: uuid(),
+          client_id: clientId,
+          writer_id: writer.id,
+          writer_name: writer.name,
+          assigned_at: new Date().toISOString(),
+          unassigned_at: null,
+          reason: null,
+          amount_received: 0,
+          assigned_by: user?.id,
+          unassigned_by: null,
         })
       }
 
@@ -189,6 +223,163 @@ export function useDeleteClient() {
       queryClient.invalidateQueries({ queryKey: ['clients'] })
       queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
       queryClient.invalidateQueries({ queryKey: ['dashboardKPIs'] })
+    },
+  })
+}
+
+// Mark client as overdue manually (or clear overdue)
+export function useSetClientStatus() {
+  const queryClient = useQueryClient()
+  const user = useAppStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: async ({ clientId, status }) => {
+      const db = getMockDB()
+      const client = db.clients.find((c) => c.id === clientId)
+      if (!client) throw new Error('Client not found')
+      const oldStatus = client.status
+      client.status = status
+      db.auditLogs.unshift({
+        id: uuid(), action: 'change_status', entity: 'client', entity_id: clientId,
+        description: `Changed status of ${client.name}: ${oldStatus} → ${status}`,
+        old_value: null, new_value: null, performed_by: user?.id,
+        created_at: new Date().toISOString(),
+        user_profiles: { full_name: user?.full_name || 'System' },
+      })
+      return client
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardKPIs'] })
+      queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
+    },
+  })
+}
+
+// Get completion readiness for a client — returns checklist
+export function getClientCompletionChecklist(clientId) {
+  const db = getMockDB()
+  const client = db.clients.find((c) => c.id === clientId)
+  if (!client) return null
+
+  const installment = db.installments.find((i) => i.client_id === clientId)
+  const paperReleases = db.paperReleases.filter((pr) => pr.client_id === clientId)
+  const payroll = db.payroll.filter((p) => p.client_id === clientId)
+  const agentCuts = db.salesAgentCuts.filter((c) => c.client_id === clientId)
+
+  const allPaid = installment && installment.status === 'Fully Paid'
+  const allPapersReleased = paperReleases.every((pr) => pr.released)
+  const allPayrollReleased = payroll.every(
+    (p) => p.first_release_status === 'Released' && p.retention_status === 'Released'
+  )
+  const allAgentCutsPaid = agentCuts.every((c) => c.paid || Number(c.cut_amount) === 0)
+
+  return {
+    allPaid,
+    allPapersReleased,
+    allPayrollReleased,
+    allAgentCutsPaid,
+    canComplete: allPaid && allPapersReleased && allPayrollReleased && allAgentCutsPaid,
+    details: {
+      totalCollected: installment?.total_paid || 0,
+      totalAmount: client.total_amount,
+      papersPending: paperReleases.filter((pr) => !pr.released).length,
+      payrollPending: payroll.filter((p) => p.first_release_status !== 'Released' || p.retention_status !== 'Released').length,
+      agentCutsPending: agentCuts.filter((c) => !c.paid && Number(c.cut_amount) > 0).length,
+    },
+  }
+}
+
+// Get completion summary (financials)
+export function getClientCompletionSummary(clientId) {
+  const db = getMockDB()
+  const client = db.clients.find((c) => c.id === clientId)
+  if (!client) return null
+
+  const installment = db.installments.find((i) => i.client_id === clientId)
+  const payroll = db.payroll.filter((p) => p.client_id === clientId)
+  const agentCuts = db.salesAgentCuts.filter((c) => c.client_id === clientId)
+
+  const totalCollected = installment?.total_paid || 0
+  const totalPaidToWriter = payroll.reduce((s, p) => {
+    let amt = 0
+    if (p.first_release_status === 'Released') amt += Number(p.first_release)
+    if (p.retention_status === 'Released') amt += Number(p.retained_amount)
+    return s + amt
+  }, 0)
+  const totalPaidToAgent = agentCuts.filter((c) => c.paid).reduce((s, c) => s + Number(c.cut_amount), 0)
+  const netMargin = totalCollected - totalPaidToWriter - totalPaidToAgent
+
+  return { client, totalCollected, totalPaidToWriter, totalPaidToAgent, netMargin }
+}
+
+export function useCompleteClient() {
+  const queryClient = useQueryClient()
+  const user = useAppStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: async ({ clientId, override, reason }) => {
+      const db = getMockDB()
+      const client = db.clients.find((c) => c.id === clientId)
+      if (!client) throw new Error('Client not found')
+
+      const checklist = getClientCompletionChecklist(clientId)
+      if (!checklist.canComplete && !override) {
+        throw new Error('Client cannot be marked Completed. Use override with a reason.')
+      }
+
+      client.status = 'Completed'
+      client.completed_at = new Date().toISOString()
+
+      db.auditLogs.unshift({
+        id: uuid(), action: 'complete_client', entity: 'client', entity_id: clientId,
+        description: override
+          ? `Marked ${client.name} Completed (OVERRIDE: ${reason})`
+          : `Marked ${client.name} Completed — all checklist items satisfied`,
+        old_value: null, new_value: null, performed_by: user?.id,
+        created_at: new Date().toISOString(),
+        user_profiles: { full_name: user?.full_name || 'System' },
+      })
+      return client
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardKPIs'] })
+      queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
+    },
+  })
+}
+
+// Year-end carry-over batch: moves Active clients to Carry-over with new year_batch
+export function useCarryOverBatch() {
+  const queryClient = useQueryClient()
+  const user = useAppStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: async ({ fromYear, toYear }) => {
+      const db = getMockDB()
+      let count = 0
+      db.clients.forEach((c) => {
+        if (c.year_batch === fromYear && (c.status === 'Active' || c.status === 'On Hold' || c.status === 'Overdue')) {
+          c.year_batch = toYear
+          c.is_carry_over = true
+          if (c.status === 'Active' || c.status === 'Overdue') c.status = 'Carry-over'
+          count++
+        }
+      })
+      db.auditLogs.unshift({
+        id: uuid(), action: 'carry_over_batch', entity: 'clients', entity_id: null,
+        description: `Carry-over batch: moved ${count} clients from ${fromYear} → ${toYear}`,
+        old_value: null, new_value: null, performed_by: user?.id,
+        created_at: new Date().toISOString(),
+        user_profiles: { full_name: user?.full_name || 'System' },
+      })
+      return { count, fromYear, toYear }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardKPIs'] })
+      queryClient.invalidateQueries({ queryKey: ['recentActivity'] })
     },
   })
 }

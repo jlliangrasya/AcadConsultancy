@@ -17,6 +17,13 @@ export const PERMISSIONS = {
   view_owner_dash:   [ROLES.OWNER],
   manage_writers:    [ROLES.FM,  ROLES.OWNER, ROLES.OPS],
   manage_agents:     [ROLES.FM,  ROLES.OWNER],
+  view_leads:        [ROLES.OPS, ROLES.FM, ROLES.OWNER],
+  manage_leads:      [ROLES.OPS, ROLES.FM, ROLES.OWNER],
+  view_expenses:     [ROLES.FM,  ROLES.OWNER],
+  manage_expenses:   [ROLES.FM,  ROLES.OWNER],
+  complete_client:   [ROLES.FM,  ROLES.OWNER],
+  reassign_writer:   [ROLES.FM,  ROLES.OWNER],
+  run_carry_over:    [ROLES.OPS, ROLES.OWNER],
 }
 
 export const canDo = (role, action) =>

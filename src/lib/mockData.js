@@ -54,6 +54,10 @@ function buildMockDB() {
   const auditLogs = []
   const fmPayoutReports = []
   const fmReportEntries = []
+  const communicationLogs = []
+  const leads = []
+  const penaltyHistory = []
+  const writerAssignments = []
 
   CLIENT_DEFS.forEach((def, idx) => {
     const clientId = `c-${String(idx + 1).padStart(3, '0')}`
@@ -209,6 +213,44 @@ function buildMockDB() {
     }
   })
 
+  // Sample communication logs
+  communicationLogs.push(
+    { id: 'cl-001', client_id: 'c-001', message: 'Called client, confirmed she will pay Give 3 by March 15.', logged_by: USERS.ops.id, logged_by_name: USERS.ops.full_name, created_at: '2026-03-01T10:00:00Z' },
+    { id: 'cl-002', client_id: 'c-001', message: 'Client requested deadline extension to July 15. Approved by owner.', logged_by: USERS.ops.id, logged_by_name: USERS.ops.full_name, created_at: '2026-03-10T14:30:00Z' },
+    { id: 'cl-003', client_id: 'c-002', message: 'Client asked about revision policy. Explained 2 free minor revisions.', logged_by: USERS.fm.id, logged_by_name: USERS.fm.full_name, created_at: '2026-02-25T09:00:00Z' },
+    { id: 'cl-004', client_id: 'c-005', message: 'Follow up on Give 2 payment — client said next week.', logged_by: USERS.fm.id, logged_by_name: USERS.fm.full_name, created_at: '2026-03-20T11:00:00Z' },
+  )
+
+  // Sample leads
+  leads.push(
+    { id: 'lead-001', name: 'Anna Santos', contact: '09191111111', level: 'Masters', program: 'MA Psychology', school: 'UST', service_interest: 'Package — Full thesis', source: 'FB Page', referred_by: 'Maria Clara', notes: 'Inquired March 5, interested in Package 4', status: 'New', follow_up_date: '2026-03-20', created_by: USERS.ops.id, created_by_name: USERS.ops.full_name, created_at: '2026-03-05T08:00:00Z' },
+    { id: 'lead-002', name: 'Ben Cruz', contact: '09192222222', level: 'College', program: 'BS Computer Science', school: 'FEU', service_interest: 'Regular — RRLs', source: 'YTWmain', referred_by: '', notes: 'Needs 20 RRLs for thesis. Budget: 5-8k', status: 'Contacted', follow_up_date: '2026-03-22', created_by: USERS.ops.id, created_by_name: USERS.ops.full_name, created_at: '2026-03-08T10:00:00Z' },
+    { id: 'lead-003', name: 'Carla Mendoza', contact: '09193333333', level: 'PhD', program: 'PhD in Education', school: 'PUP', service_interest: 'Package — Chapters 1-3', source: 'Referral', referred_by: 'Tandang Sora', notes: 'Waiting for budget confirmation. Follow up Friday.', status: 'Qualified', follow_up_date: '2026-03-25', created_by: USERS.ops.id, created_by_name: USERS.ops.full_name, created_at: '2026-03-12T15:00:00Z' },
+    { id: 'lead-004', name: 'Dan Aquino', contact: '09194444444', level: 'Senior High School', program: 'STEM', school: 'Mapua', service_interest: 'Regular — revision', source: 'FB Page', referred_by: '', notes: 'Low budget. May not convert.', status: 'Lost', follow_up_date: null, created_by: USERS.ops.id, created_by_name: USERS.ops.full_name, created_at: '2026-03-01T09:00:00Z' },
+  )
+
+  // Sample penalty history
+  penaltyHistory.push(
+    { id: 'ph-001', payroll_id: 'pay-c-001-1', old_pct: 0, new_pct: 5, reason: 'Late submission', changed_by: USERS.fm.id, changed_by_name: USERS.fm.full_name, changed_at: '2026-03-01T11:00:00Z' },
+  )
+
+  // Writer assignments (initial)
+  CLIENT_DEFS.forEach((def, idx) => {
+    const clientId = `c-${String(idx + 1).padStart(3, '0')}`
+    writerAssignments.push({
+      id: `wa-${clientId}`,
+      client_id: clientId,
+      writer_id: def.writer_id,
+      writer_name: WRITERS.find((w) => w.id === def.writer_id)?.name || '',
+      assigned_at: new Date(2026, 0, 1 + idx).toISOString(),
+      unassigned_at: null,
+      reason: null,
+      amount_received: 0,
+      assigned_by: USERS.ops.id,
+      unassigned_by: null,
+    })
+  })
+
   // Sample audit logs
   auditLogs.push(
     { id: 'log-001', action: 'create', entity: 'client', entity_id: 'c-001', description: 'Added client: Maria Clara — Thesis - Educational Psychology', old_value: null, new_value: null, performed_by: USERS.ops.id, created_at: '2026-01-02T09:00:00Z', user_profiles: { full_name: USERS.ops.full_name } },
@@ -233,6 +275,10 @@ function buildMockDB() {
     fmPayoutReports,
     fmReportEntries,
     expenses: [],
+    communicationLogs,
+    leads,
+    penaltyHistory,
+    writerAssignments,
   }
 }
 
