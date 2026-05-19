@@ -1,5 +1,5 @@
 -- ============================================================
--- YTW Writes Management System — Full Database Schema
+-- Academic Consultancy Management System — Full Database Schema
 -- Run this in your Supabase SQL Editor
 -- ============================================================
 

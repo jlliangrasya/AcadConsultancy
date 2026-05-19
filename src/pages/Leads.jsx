@@ -59,7 +59,7 @@ function LeadForm({ lead, onSubmit, onCancel, loading }) {
       <Input label="Service of Interest *" value={form.service_interest} onChange={(e) => setForm({ ...form, service_interest: e.target.value })} required placeholder="e.g. Package — Full thesis, or Regular — RRLs" />
 
       <div className="grid grid-cols-2 gap-4">
-        <Input label="Source" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="e.g. YTWmain, FB Page" />
+        <Input label="Source" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="e.g. Main Page, FB Page" />
         <Input label="Referred by (client name)" value={form.referred_by} onChange={(e) => setForm({ ...form, referred_by: e.target.value })} placeholder="If referred by existing client" />
       </div>
 

@@ -195,7 +195,7 @@ export default function ClientForm({ client, onSubmit, onCancel, loading }) {
       <div className="grid grid-cols-3 gap-4">
         <Input label="Total Amount (₱) *" type="number" min="1" value={form.total_amount} onChange={(e) => handleChange('total_amount', e.target.value)} required />
         <Select label="Number of Gives *" value={form.gives} onChange={(e) => handleChange('gives', e.target.value)} options={givesOptions.map((g) => ({ value: g, label: `${g} give${g > 1 ? 's' : ''}` }))} />
-        <Input label="Page / Referral Source" value={form.referral_source} onChange={(e) => handleChange('referral_source', e.target.value)} placeholder="e.g. YTWmain" />
+        <Input label="Page / Referral Source" value={form.referral_source} onChange={(e) => handleChange('referral_source', e.target.value)} placeholder="e.g. Main Page" />
       </div>
       <Input label="Referred by" value={form.referred_by} onChange={(e) => handleChange('referred_by', e.target.value)} placeholder="Name of the client who referred this person (if any)" />
 

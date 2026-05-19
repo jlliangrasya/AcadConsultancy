@@ -64,7 +64,7 @@ function generatePLPDF(from, to, pl) {
   let y = 20
 
   doc.setFontSize(18)
-  doc.text('YTW Writes', 14, y)
+  doc.text('Academic Consultancy', 14, y)
   y += 8
   doc.setFontSize(14)
   doc.text('Profit & Loss Statement', 14, y)
@@ -135,7 +135,7 @@ function generatePLPDF(from, to, pl) {
   doc.setFontSize(8)
   doc.setTextColor(128)
   doc.setFont(undefined, 'normal')
-  doc.text('CONFIDENTIAL — YTW Writes', 14, 288)
+  doc.text('CONFIDENTIAL — Academic Consultancy', 14, 288)
 
   doc.save(`PL-${from}-to-${to}.pdf`)
 }

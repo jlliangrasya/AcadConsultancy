@@ -6,7 +6,7 @@ export function generateFMReportPDF(report, entries) {
 
   // Header
   doc.setFontSize(18)
-  doc.text('YTW Writes', 14, y)
+  doc.text('Academic Consultancy', 14, y)
   y += 8
   doc.setFontSize(14)
   doc.text(`Payroll Run #${report.run_number}`, 14, y)
@@ -95,7 +95,7 @@ export function generateFMReportPDF(report, entries) {
     doc.setPage(i)
     doc.setFontSize(7)
     doc.setTextColor(128)
-    doc.text('CONFIDENTIAL — YTW Writes', 14, 288)
+    doc.text('CONFIDENTIAL — Academic Consultancy', 14, 288)
     doc.text(`Page ${i} of ${pageCount}`, 180, 288)
   }
 
